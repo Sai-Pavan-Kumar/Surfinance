@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Hash, CircleDot, Calendar, Tag, ArrowUpRight, X, ChevronDown, Plus } from "lucide-react";
+import { Hash, CircleDot, Calendar, Tag, ArrowUpRight, X, Plus } from "lucide-react";
 
 interface NewEntryModalProps {
   isOpen: boolean;
@@ -9,6 +9,26 @@ interface NewEntryModalProps {
   onSave: (data: any) => Promise<void>;
   existingCategories: string[];
 }
+
+// Helper function to generate Notion-like colors consistently based on category name
+const getNotionColor = (text: string) => {
+  const colors = [
+    "bg-gray-100 text-gray-700",
+    "bg-red-100 text-red-700",
+    "bg-orange-100 text-orange-700",
+    "bg-amber-100 text-amber-700",
+    "bg-green-100 text-green-700",
+    "bg-blue-100 text-blue-700",
+    "bg-indigo-100 text-indigo-700",
+    "bg-purple-100 text-purple-700",
+    "bg-pink-100 text-pink-700",
+  ];
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
 
 export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: NewEntryModalProps) {
   const [name, setName] = useState("");
@@ -57,10 +77,10 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
     onClose();
   };
 
-  // Filter categories based on what the user types
-  const filteredCategories = existingCategories.filter(c => 
-    c.toLowerCase().includes(category.toLowerCase())
-  );
+  // 1. Filter and SORT categories alphabetically
+  const filteredCategories = existingCategories
+    .filter(c => c.toLowerCase().includes(category.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
 
   const exactMatchExists = existingCategories.some(c => c.toLowerCase() === category.toLowerCase());
 
@@ -72,7 +92,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
         <div className="p-8 pb-4 relative">
           <button 
             onClick={onClose} 
-            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors z-10"
           >
             <X size={20} />
           </button>
@@ -82,16 +102,17 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             placeholder="Transaction Name..."
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full text-4xl font-bold font-heading text-gray-900 placeholder-gray-300 bg-transparent border-none focus:outline-none mb-2"
+            // FIX: Changed to text-2xl for mobile, sm:text-4xl for laptop, added pr-10 so it doesn't overlap 'X'
+            className="w-full text-2xl sm:text-4xl font-bold font-heading text-gray-900 placeholder-gray-300 bg-transparent border-none focus:outline-none mb-2 pr-10"
           />
         </div>
 
         {/* Stacked Properties Section */}
         <div className="px-8 py-4 space-y-5">
           
-          {/* Amount (Removed Slider Arrows via CSS) */}
+          {/* Amount */}
           <div className="flex items-center">
-            <div className="w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Hash size={16} /> Amount
             </div>
             <input
@@ -106,7 +127,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
 
           {/* Smart Category Autocomplete */}
           <div className="flex items-start pt-1" ref={categoryRef}>
-            <div className="w-36 flex items-center gap-2 text-gray-400 text-sm font-medium mt-1">
+            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium mt-1">
               <CircleDot size={16} /> Category
             </div>
             <div className="flex-1 relative">
@@ -119,11 +140,11 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
                   setIsCategoryDropdownOpen(true);
                 }}
                 onFocus={() => setIsCategoryDropdownOpen(true)}
-                className="w-full text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none placeholder-gray-300"
+                className="w-full text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none placeholder-gray-300 font-body"
               />
               
               {isCategoryDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 max-h-48 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1">
+                <div className="absolute top-full left-0 right-0 mt-2 max-h-56 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-2 space-y-1">
                   
                   {filteredCategories.map((cat) => (
                     <button
@@ -132,24 +153,27 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
                         setCategory(cat);
                         setIsCategoryDropdownOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
                     >
-                      {cat}
+                      {/* FIX: Notion-style colored tag */}
+                      <span className={`text-xs font-medium px-2 py-1 rounded-md ${getNotionColor(cat)} font-body`}>
+                        {cat}
+                      </span>
                     </button>
                   ))}
 
-                  {/* Option to create a new category if it doesn't exist perfectly yet */}
+                  {/* Option to create a new category */}
                   {category && !exactMatchExists && (
                     <button
                       onClick={() => setIsCategoryDropdownOpen(false)}
-                      className="w-full text-left px-4 py-2 text-sm text-[#0092FF] hover:bg-blue-50 transition-colors flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-sm font-medium text-[#0092FF] hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2 font-body"
                     >
                       <Plus size={14} /> Create "{category}"
                     </button>
                   )}
 
                   {filteredCategories.length === 0 && !category && (
-                    <div className="px-4 py-2 text-sm text-gray-400 italic">No categories yet</div>
+                    <div className="px-3 py-2 text-sm text-gray-400 italic font-body">No categories yet</div>
                   )}
                 </div>
               )}
@@ -158,20 +182,28 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
 
           {/* Date */}
           <div className="flex items-center">
-            <div className="w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Calendar size={16} /> Date
             </div>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer"
+              // FIX: Added onClick showPicker() so the calendar pops up reliably on all mobile phones
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker();
+                } catch (err) {
+                  // Fallback for older browsers
+                }
+              }}
+              className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer w-full"
             />
           </div>
 
           {/* Type */}
           <div className="flex items-center">
-            <div className="w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Tag size={16} /> Type
             </div>
             <select
@@ -185,9 +217,9 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             </select>
           </div>
 
-          {/* Account (Formerly 'rel') */}
+          {/* Account */}
           <div className="flex items-center">
-            <div className="w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <ArrowUpRight size={16} /> Account
             </div>
             <select
