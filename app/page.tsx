@@ -34,7 +34,7 @@ export default async function SurfinanceDashboard() {
               Surfinance
             </h1>
             <p className="text-gray-400 text-sm mt-1 font-medium">
-              Your budget, buttery smooth.
+              My budget tracker
             </p>
           </div>
           
