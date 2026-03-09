@@ -30,10 +30,12 @@ export function AddEntryButton({ onSaveAction, existingCategories }: AddEntryBut
     <>
       <button 
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 bg-[#007AFF] text-white px-5 py-2.5 rounded-2xl font-bold font-body shadow-lg shadow-blue-200/50 transition-transform active:scale-95 hover:bg-[#0063CC]"
+        // FIX: Made the button wider on mobile, perfectly centered, thicker, and rounded like a pill
+        className="flex items-center justify-center gap-2 w-full max-w-[250px] md:w-auto bg-[#007AFF] text-white px-6 py-3.5 md:py-2.5 rounded-full font-bold font-body shadow-xl shadow-blue-200/50 transition-transform active:scale-95 hover:bg-[#0063CC]"
       >
         <Plus size={20} />
-        <span className="hidden sm:inline">New Entry</span>
+        {/* FIX: Removed 'hidden sm:inline' so the text always shows on mobile */}
+        <span className="text-base">New Entry</span>
       </button>
 
       <NewEntryModal 

@@ -23,7 +23,8 @@ export default async function SurfinanceDashboard() {
   const existingCategories = Array.from(new Set(transactions.map((t) => t.category))).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6 md:p-10 font-body">
+    // FIX 1: Added pb-32 (padding-bottom) on mobile so you can scroll past the floating button without it blocking your content
+    <div className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6 pb-32 md:p-10 font-body">
       <div className="max-w-5xl mx-auto space-y-10">
         
         {/* Header Section */}
@@ -37,8 +38,10 @@ export default async function SurfinanceDashboard() {
             </p>
           </div>
           
-          {/* Our new Interactive Button connected to the Server Action and passed existing categories */}
-          <AddEntryButton onSaveAction={handleAddEntry} existingCategories={existingCategories} />
+          {/* FIX 2: Changed to span the bottom width on mobile (left-6 right-6) and flex justify-center to hold a wide Apple-style button */}
+          <div className="fixed bottom-8 left-6 right-6 z-50 flex justify-center md:static md:bottom-auto md:left-auto md:right-auto md:z-auto">
+            <AddEntryButton onSaveAction={handleAddEntry} existingCategories={existingCategories} />
+          </div>
         </header>
 
         {/* Balance Cards Grid */}

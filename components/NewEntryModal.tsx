@@ -40,6 +40,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isAmountFocused, setIsAmountFocused] = useState(false); // New state for formatting
   
   const categoryRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +78,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
     onClose();
   };
 
-  // 1. Filter and SORT categories alphabetically
+  // Filter and SORT categories alphabetically
   const filteredCategories = existingCategories
     .filter(c => c.toLowerCase().includes(category.toLowerCase()))
     .sort((a, b) => a.localeCompare(b));
@@ -102,7 +103,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             placeholder="Transaction Name..."
             value={name}
             onChange={(e) => setName(e.target.value)}
-            // FIX: Changed to text-2xl for mobile, sm:text-4xl for laptop, added pr-10 so it doesn't overlap 'X'
             className="w-full text-2xl sm:text-4xl font-bold font-heading text-gray-900 placeholder-gray-300 bg-transparent border-none focus:outline-none mb-2 pr-10"
           />
         </div>
@@ -112,22 +112,25 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
           
           {/* Amount */}
           <div className="flex items-center">
-            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            {/* Added shrink-0 to prevent label from squishing on mobile */}
+            <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Hash size={16} /> Amount
             </div>
             <input
-              type="number"
-              placeholder="0.00"
-              value={amount}
+              type={isAmountFocused ? "number" : "text"}
+              placeholder="₹0.00"
+              value={isAmountFocused ? amount : (amount ? `₹${Number(amount).toFixed(1)}/-` : "")}
               onChange={(e) => setAmount(e.target.value)}
+              onFocus={() => setIsAmountFocused(true)}
+              onBlur={() => setIsAmountFocused(false)}
               className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none placeholder-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               autoFocus
             />
           </div>
 
           {/* Smart Category Autocomplete */}
-          <div className="flex items-start pt-1" ref={categoryRef}>
-            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium mt-1">
+          <div className="flex items-center pt-1" ref={categoryRef}>
+            <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <CircleDot size={16} /> Category
             </div>
             <div className="flex-1 relative">
@@ -155,7 +158,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
                       }}
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
                     >
-                      {/* FIX: Notion-style colored tag */}
                       <span className={`text-xs font-medium px-2 py-1 rounded-md ${getNotionColor(cat)} font-body`}>
                         {cat}
                       </span>
@@ -182,14 +184,13 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
 
           {/* Date */}
           <div className="flex items-center">
-            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Calendar size={16} /> Date
             </div>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              // FIX: Added onClick showPicker() so the calendar pops up reliably on all mobile phones
               onClick={(e) => {
                 try {
                   e.currentTarget.showPicker();
@@ -203,7 +204,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
 
           {/* Type */}
           <div className="flex items-center">
-            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Tag size={16} /> Type
             </div>
             <select
@@ -219,7 +220,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
 
           {/* Account */}
           <div className="flex items-center">
-            <div className="w-32 sm:w-36 flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <ArrowUpRight size={16} /> Account
             </div>
             <select
