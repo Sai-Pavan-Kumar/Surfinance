@@ -7,7 +7,7 @@ import { AddEntryButton } from "../components/AddEntryButton";
 // Optimize for Cloudflare Pages
 export const runtime = 'edge';
 
-// FIX 1: Changed to 10 seconds (ISR). The page loads instantly from cache, 
+// Changed to 10 seconds (ISR). The page loads instantly from cache, 
 // and seamlessly updates in the background every 10 seconds.
 export const revalidate = 10; 
 
@@ -22,6 +22,9 @@ export default async function SurfinanceDashboard() {
   }
 
   const existingCategories = Array.from(new Set(transactions.map((t) => t.category))).filter(Boolean);
+  
+  // Map the dynamically fetched accounts to get just their names (e.g., ["Kotak Bank", "Hand Cash"])
+  const accountNames = accounts.map((acc: any) => acc.name);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#1A1A1A] p-6 pb-32 md:p-10 font-body">
@@ -39,11 +42,16 @@ export default async function SurfinanceDashboard() {
           </div>
           
           <div className="fixed bottom-8 left-6 right-6 z-50 flex justify-center md:static md:bottom-auto md:left-auto md:right-auto md:z-auto">
-            <AddEntryButton onSaveAction={handleAddEntry} existingCategories={existingCategories} />
+            {/* Pass accountNames into the button component */}
+            <AddEntryButton 
+              onSaveAction={handleAddEntry} 
+              existingCategories={existingCategories} 
+              accounts={accountNames} 
+            />
           </div>
         </header>
 
-        {/* FIX 2: Dynamic Balance Cards Grid. This will loop through your Notion accounts automatically. */}
+        {/* Dynamic Balance Cards Grid. This loops through your Notion accounts automatically. */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((acc: any, index: number) => {
             // Assign a color automatically based on its position

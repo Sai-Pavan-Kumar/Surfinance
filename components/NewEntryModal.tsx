@@ -8,9 +8,9 @@ interface NewEntryModalProps {
   onClose: () => void;
   onSave: (data: any) => Promise<void>;
   existingCategories: string[];
+  accounts: string[]; // FIX: Added accounts array here
 }
 
-// Helper function to generate Notion-like colors consistently based on category name
 const getNotionColor = (text: string) => {
   const colors = [
     "bg-gray-100 text-gray-700",
@@ -30,21 +30,22 @@ const getNotionColor = (text: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: NewEntryModalProps) {
+export function NewEntryModal({ isOpen, onClose, onSave, existingCategories, accounts }: NewEntryModalProps) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [type, setType] = useState<"Expense" | "Income">("Expense");
-  const [rel, setRel] = useState<"Digital Cash" | "Hand Cash">("Digital Cash");
+  const [type, setType] = useState<string>("Expense"); // FIX: Made dynamic
+  
+  // FIX: Default to the first account in your Notion list
+  const [rel, setRel] = useState<string>(accounts.length > 0 ? accounts[0] : ""); 
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-  const [isAmountFocused, setIsAmountFocused] = useState(false); // New state for formatting
+  const [isAmountFocused, setIsAmountFocused] = useState(false); 
   
   const categoryRef = useRef<HTMLDivElement>(null);
 
-  // Close category dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
@@ -54,6 +55,13 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Update default account if accounts list loads late
+  useEffect(() => {
+    if (accounts.length > 0 && !rel) {
+      setRel(accounts[0]);
+    }
+  }, [accounts, rel]);
 
   if (!isOpen) return null;
 
@@ -68,7 +76,7 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
       category,
       date,
       type,
-      rel,
+      rel, // This will now send "Kotak Bank" or "Canara Bank" etc.
     });
 
     setIsSubmitting(false);
@@ -78,7 +86,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
     onClose();
   };
 
-  // Filter and SORT categories alphabetically
   const filteredCategories = existingCategories
     .filter(c => c.toLowerCase().includes(category.toLowerCase()))
     .sort((a, b) => a.localeCompare(b));
@@ -89,7 +96,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4 transition-opacity font-body">
       <div className="bg-white rounded-[24px] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Header / Title Section */}
         <div className="p-8 pb-4 relative">
           <button 
             onClick={onClose} 
@@ -107,12 +113,9 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
           />
         </div>
 
-        {/* Stacked Properties Section */}
         <div className="px-8 py-4 space-y-5">
           
-          {/* Amount */}
           <div className="flex items-center">
-            {/* Added shrink-0 to prevent label from squishing on mobile */}
             <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Hash size={16} /> Amount
             </div>
@@ -128,7 +131,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             />
           </div>
 
-          {/* Smart Category Autocomplete */}
           <div className="flex items-center pt-1" ref={categoryRef}>
             <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <CircleDot size={16} /> Category
@@ -148,7 +150,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
               
               {isCategoryDropdownOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 max-h-56 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-2 space-y-1">
-                  
                   {filteredCategories.map((cat) => (
                     <button
                       key={cat}
@@ -163,8 +164,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
                       </span>
                     </button>
                   ))}
-
-                  {/* Option to create a new category */}
                   {category && !exactMatchExists && (
                     <button
                       onClick={() => setIsCategoryDropdownOpen(false)}
@@ -173,7 +172,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
                       <Plus size={14} /> Create "{category}"
                     </button>
                   )}
-
                   {filteredCategories.length === 0 && !category && (
                     <div className="px-3 py-2 text-sm text-gray-400 italic font-body">No categories yet</div>
                   )}
@@ -182,7 +180,6 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             </div>
           </div>
 
-          {/* Date */}
           <div className="flex items-center">
             <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Calendar size={16} /> Date
@@ -194,22 +191,19 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
               onClick={(e) => {
                 try {
                   e.currentTarget.showPicker();
-                } catch (err) {
-                  // Fallback for older browsers
-                }
+                } catch (err) {}
               }}
               className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer w-full"
             />
           </div>
 
-          {/* Type */}
           <div className="flex items-center">
             <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <Tag size={16} /> Type
             </div>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as "Expense" | "Income")}
+              onChange={(e) => setType(e.target.value)}
               className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer outline-none ring-0 appearance-none bg-no-repeat bg-right pr-6"
               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
             >
@@ -218,25 +212,25 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories }: N
             </select>
           </div>
 
-          {/* Account */}
+          {/* FIX: Dynamic Accounts Dropdown mapped to Notion */}
           <div className="flex items-center">
             <div className="w-28 sm:w-36 shrink-0 flex items-center gap-2 text-gray-400 text-sm font-medium">
               <ArrowUpRight size={16} /> Account
             </div>
             <select
               value={rel}
-              onChange={(e) => setRel(e.target.value as "Digital Cash" | "Hand Cash")}
+              onChange={(e) => setRel(e.target.value)}
               className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer outline-none ring-0 appearance-none bg-no-repeat bg-right pr-6"
               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
             >
-              <option value="Digital Cash">Digital Cash</option>
-              <option value="Hand Cash">Hand Cash</option>
+              {accounts.map((accName) => (
+                <option key={accName} value={accName}>{accName}</option>
+              ))}
             </select>
           </div>
           
         </div>
 
-        {/* Footer Actions */}
         <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 mt-4">
           <button
             onClick={onClose}
