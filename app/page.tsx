@@ -52,10 +52,11 @@ export default async function SurfinanceDashboard() {
         </header>
 
         {/* Dynamic Balance Cards Grid. This loops through your Notion accounts automatically. */}
+        {/* FIX: Restricted colors to only "blue" and "green" to match StatsCard requirements */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((acc: any, index: number) => {
-            // Assign a color automatically based on its position
-            const colors = ["blue", "green", "purple", "orange"];
+            // TypeScript fix: explicitly defining the type to match StatsCard
+            const colors: ("blue" | "green")[] = ["blue", "green"];
             const colorType = colors[index % colors.length];
 
             return (
