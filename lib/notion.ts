@@ -9,7 +9,7 @@ const accountsDatabaseId = "2da9fbd3f1b1808c937ac8e6c70a1576"; // Your Accounts 
 
 export async function getDashboardData() {
   try {
-    // 1. Fetch ALL Accounts Dynamically (No hardcoded names!)
+    // 1. Fetch ALL Accounts
     const accountsResponse = await notion.databases.query({
       database_id: accountsDatabaseId,
     });
@@ -21,11 +21,16 @@ export async function getDashboardData() {
       return { id: page.id, name, balance };
     });
 
-    // Create a lookup map to easily find account names for transactions
     const accountMap = new Map();
     accounts.forEach((acc) => accountMap.set(acc.id, acc.name));
 
-    // 2. Fetch only the most recent 100 transactions for the Chart
+    // 2. Fetch Master Categories list directly from the Database Schema
+    const dbMetadata = await notion.databases.retrieve({ database_id: databaseId });
+    const masterCategories = (dbMetadata.properties.Category as any).select.options.map(
+      (option: any) => option.name
+    );
+
+    // 3. Fetch Transactions
     const transactionResponse = await notion.databases.query({
       database_id: databaseId,
       page_size: 100,
@@ -36,9 +41,7 @@ export async function getDashboardData() {
       const props = page.properties;
       const relData = props.rel?.relation;
       const relatedPageId = relData && relData.length > 0 ? relData[0].id : null;
-
-      // Dynamically assign the account name using our map
-      const relName = relatedPageId ? accountMap.get(relatedPageId) || "Unknown Account" : "No Account";
+      const relName = relatedPageId ? accountMap.get(relatedPageId) || "Unknown" : "No Account";
 
       return {
         id: page.id,
@@ -47,15 +50,14 @@ export async function getDashboardData() {
         category: props.Category?.select?.name || "Uncategorized",
         type: props.Type?.select?.name || "Expense", 
         rel: relName, 
-        date: props.Date?.date?.start || "", // Ensure Notion column is exactly "Date"
+        date: props.Date?.date?.start || "",
       };
     });
 
-    // Return the dynamic array of accounts instead of fixed balances
-    return { transactions, accounts };
+    return { transactions, accounts, masterCategories }; // FIX: Added masterCategories
   } catch (error) {
     console.error("Notion API Error:", error);
-    return { transactions: [], accounts: [] };
+    return { transactions: [], accounts: [], masterCategories: [] };
   }
 }
 

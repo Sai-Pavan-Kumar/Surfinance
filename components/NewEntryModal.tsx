@@ -218,9 +218,9 @@ export function NewEntryModal({ isOpen, onClose, onSave, existingCategories, acc
               <ArrowUpRight size={16} /> Account
             </div>
             <select
-              value={rel}
-              onChange={(e) => setRel(e.target.value)}
-              className="flex-1 text-sm font-medium text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer outline-none ring-0 appearance-none bg-no-repeat bg-right pr-6"
+  value={rel}
+  onChange={(e) => setRel(e.target.value)}
+  className="flex-1 text-sm font-body font-semibold text-gray-900 bg-transparent border-none focus:outline-none cursor-pointer outline-none ring-0 appearance-none bg-no-repeat bg-right pr-6"
               style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
             >
               {accounts.map((accName) => (
